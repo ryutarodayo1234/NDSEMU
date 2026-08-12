@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('msg-layer');
     const toastText = document.getElementById('msg-text');
 
-    // --- 1. Shadow DOM スタイルの動的注入 (下揃え) ---
+    // --- 1. Shadow DOM スタイルの動的注入 (下揃え & タッチ制限解除) ---
     function injectShadowStyles() {
         if (player && player.shadowRoot) {
             if (player.shadowRoot.querySelector('style')) return;
@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     gap: 12px;
                     width: 100%;
                     height: 100%;
-                    padding-bottom: max(16px, env(safe-area-inset-bottom)); /* iOSホームバーとの干渉防止 */
+                    padding-bottom: max(16px, env(safe-area-inset-bottom)); /* iOSホームバー回避 */
+                    touch-action: none;
                 }
                 canvas {
                     image-rendering: pixelated;
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     border-radius: 12px;
                     background-color: #000000;
                     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                    touch-action: none; /* Safariでのスクロール・ダブルタップズームを防止 */
                 }
                 #top {
                     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -109,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        showToast(isAutoResume ? '前回のゲームを起動中...' : 'ROMをロード中...');
+        showToast(isAutoResume ? '前回のゲームを自動起動中...' : 'ROMをロード中...');
         
         if (!isAutoResume) {
             saveRomToStorage(file, name);
@@ -147,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedRom = await localforage.getItem('saved_rom');
             
             if (savedRomName && savedRom) {
-                // UI表示を自動ロード中に書き換える
                 document.querySelector('.upload-content h2').textContent = '自動起動中...';
                 document.querySelector('.drop-text').textContent = savedRomName;
                 document.querySelector('.or-text').style.display = 'none';
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. Safari 音声制限解除 ---
+    // --- 4. Safari 音声ブロック解除 ---
     function unlockAudio() {
         if (window.AudioContext || window.webkitAudioContext) {
             const AudioClass = window.AudioContext || window.webkitAudioContext;
@@ -170,28 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // --- 5. iOS Safari ズーム・スクロール無効化 ---
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', (e) => {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            e.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 1) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!e.target.closest('desmond-player')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
 
     checkAndAutoStart();
 });
