@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('msg-layer');
     const toastText = document.getElementById('msg-text');
 
-    // 設定トグル要素
+    // 設定要素
     const cfgPowerSave = document.getElementById('cfg-power-save');
     const cfgMute = document.getElementById('cfg-mute');
     const cfgSwapScreen = document.getElementById('cfg-swap-screen');
+    const btnClearRom = document.getElementById('btn-clear-rom');
 
     // --- 1. Shadow DOM スタイルの動的注入 ---
     function injectShadowStyles() {
         if (player && player.shadowRoot) {
-            // すでにスタイルがあるか確認
             if (player.shadowRoot.querySelector('style')) return;
 
             const style = document.createElement('style');
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     border: 2px solid #00f0ff;
                     box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
                 }
-                /* タッチ中またはペン操作時の視覚フィードバック */
                 #bottom:active {
                     border-color: #bc13fe;
                     box-shadow: 0 0 20px rgba(188, 19, 254, 0.5);
@@ -58,8 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Shadow DOM がアタッチされるのを監視 (Desmondが動的にアタッチするため)
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver(() => {
         if (player && player.shadowRoot) {
             injectShadowStyles();
             observer.disconnect();
@@ -67,14 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (player) {
         observer.observe(player, { attributes: true, childList: true });
-        // すでに存在していれば即座に適用
         if (player.shadowRoot) {
             injectShadowStyles();
             observer.disconnect();
         }
     }
 
-    // --- 2. トースト表示関数 ---
+    // --- 2. トースト表示 ---
     function showToast(message, duration = 3000) {
         toastText.textContent = message;
         toast.hidden = false;
@@ -88,12 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, duration);
     }
 
-    // --- 3. ROM選択 & 読み込みロジック ---
+    // --- 3. ROMファイルのロード・起動・自動保存ロジック ---
     btnSelectRom.addEventListener('click', () => romInput.click());
     
     romInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
-            loadRomFile(e.target.files[0]);
+            loadRomFile(e.target.files[0], e.target.files[0].name, false);
         }
     });
 
@@ -116,25 +113,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const dt = e.dataTransfer;
         const files = dt.files;
         if (files.length > 0) {
-            loadRomFile(files[0]);
+            loadRomFile(files[0], files[0].name, false);
         }
     });
 
-    function loadRomFile(file) {
-        if (!file.name.toLowerCase().endsWith('.nds')) {
+    // ROMのロード処理
+    function loadRomFile(file, name, isAutoResume = false) {
+        if (!name.toLowerCase().endsWith('.nds')) {
             showToast('有効な .nds ファイルを選択してください。');
             return;
         }
 
-        showToast('ROMをロードしています...');
+        showToast(isAutoResume ? '前回のゲームを自動起動中...' : 'ROMをロードしています...');
+        
+        // 新規ロード時は IndexedDB に保存
+        if (!isAutoResume) {
+            saveRomToStorage(file, name);
+        }
+
         const blobUrl = URL.createObjectURL(file);
 
-        // Desmond のロード関数を呼び出し
         if (player && typeof player.loadURL === 'function') {
             player.loadURL(blobUrl, () => {
                 showToast('ゲームが起動しました！');
                 
-                // PWA起動時は案内を非表示に
                 if (window.navigator.standalone) {
                     document.getElementById('pwa-hint').style.display = 'none';
                 }
@@ -143,19 +145,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 welcomeOverlay.style.opacity = '0';
                 setTimeout(() => {
                     welcomeOverlay.style.display = 'none';
+                    // 予備で UI のテキストをリセットしておく
+                    resetWelcomeUI();
                 }, 300);
 
-                // 音声コンテキストのアンロック
                 unlockAudio();
-
-                // FPSカウンターの開始
                 startFpsCounter();
-
-                // リソース解放
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
             });
         } else {
-            showToast('エミュレータの初期化に失敗しました。再読み込みしてください。');
+            showToast('エミュレータの初期化に失敗しました。再起動してください。');
+        }
+    }
+
+    // ROMをブラウザストレージに保存する非同期関数
+    async function saveRomToStorage(fileBlob, name) {
+        try {
+            showToast('自動起動のため、ROMをブラウザに保存中...');
+            await localforage.setItem('saved_rom', fileBlob);
+            await localforage.setItem('saved_rom_name', name);
+            showToast('ROMをブラウザに保存しました！');
+        } catch (e) {
+            console.error("ROM保存エラー:", e);
+            showToast('ROMの保存に失敗しました（容量不足の可能性があります）');
+        }
+    }
+
+    function resetWelcomeUI() {
+        document.querySelector('.upload-content h2').textContent = 'ROMファイルをロード';
+        document.querySelector('.drop-text').textContent = 'ここに .nds ファイルをドラッグ＆ドロップ';
+        document.querySelector('.or-text').style.display = 'block';
+        btnSelectRom.style.display = 'inline-block';
+    }
+
+    // 起動時に保存されたゲームを自動ロードする
+    async function checkAndAutoStart() {
+        try {
+            const savedRomName = await localforage.getItem('saved_rom_name');
+            const savedRom = await localforage.getItem('saved_rom');
+            
+            if (savedRomName && savedRom) {
+                // UI表示を自動ロード中に書き換える
+                document.querySelector('.upload-content h2').textContent = '前回のゲームを自動起動中...';
+                document.querySelector('.drop-text').textContent = savedRomName;
+                document.querySelector('.or-text').style.display = 'none';
+                btnSelectRom.style.display = 'none';
+                
+                // 自動起動を実行
+                loadRomFile(savedRom, savedRomName, true);
+            }
+        } catch (e) {
+            console.error("自動起動確認エラー:", e);
         }
     }
 
@@ -163,8 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function unlockAudio() {
         if (window.AudioContext || window.webkitAudioContext) {
             const AudioClass = window.AudioContext || window.webkitAudioContext;
-            // 既存のアクティブなコンテキストのresumeを試みる
-            // (desmond.min.js内のコンテキストをアンロックするため、ダミーのインタラクションを発生させる)
             const dummyCtx = new AudioClass();
             if (dummyCtx.state === 'suspended') {
                 dummyCtx.resume().then(() => dummyCtx.close());
@@ -172,8 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 5. iOS Safari のズーム・スクロールジェスチャー制限の完全無効化 ---
-    // ダブルタップズームの防止
+    // --- 5. iOS Safari のズーム・スクロールジェスチャー制限無効化 ---
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
         const now = Date.now();
@@ -183,22 +220,19 @@ document.addEventListener('DOMContentLoaded', () => {
         lastTouchEnd = now;
     }, { passive: false });
 
-    // ピンチズーム（マルチタッチ）の防止
     document.addEventListener('touchmove', (e) => {
         if (e.touches.length > 1) {
             e.preventDefault();
         }
     }, { passive: false });
 
-    // 画面のバウンス（スクロール）防止
     document.addEventListener('touchmove', (e) => {
-        // エミュレータ画面エリア外のスワイプによるスクロールを防ぐ
         if (!e.target.closest('desmond-player')) {
             e.preventDefault();
         }
     }, { passive: false });
 
-    // --- 6. 設定の永続化と同期 (localStorage) ---
+    // --- 6. 設定の永続化と同期 ---
     function getStoredConfig() {
         try {
             return JSON.parse(localStorage.getItem('config') || '{}');
@@ -211,15 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('config', JSON.stringify(config));
     }
 
-    // UIトグルとlocalStorageの同期
     function initConfigUI() {
         const config = getStoredConfig();
         
-        cfgPowerSave.checked = config.powerSave !== false; // デフォルト ON (省電力)
-        cfgMute.checked = !!config.muteSound;             // デフォルト OFF
-        cfgSwapScreen.checked = !!config.swapTopBottom;   // デフォルト OFF
+        cfgPowerSave.checked = config.powerSave !== false;
+        cfgMute.checked = !!config.muteSound;
+        cfgSwapScreen.checked = !!config.swapTopBottom;
 
-        // イベント設定
         cfgPowerSave.addEventListener('change', (e) => {
             const cfg = getStoredConfig();
             cfg.powerSave = e.target.checked;
@@ -240,26 +272,36 @@ document.addEventListener('DOMContentLoaded', () => {
             saveStoredConfig(cfg);
             showToast('画面レイアウト設定を保存しました（次回起動時に反映）');
         });
+
+        // 保存されたROMの削除ボタンの処理
+        if (btnClearRom) {
+            btnClearRom.addEventListener('click', async () => {
+                const confirmed = confirm('保存されたゲームデータを削除しますか？\n次回起動時はファイル選択が必要になります。');
+                if (confirmed) {
+                    try {
+                        await localforage.removeItem('saved_rom');
+                        await localforage.removeItem('saved_rom_name');
+                        showToast('保存データを削除しました。ページをリロードします。');
+                        setTimeout(() => location.reload(), 1200);
+                    } catch (e) {
+                        showToast('データの削除に失敗しました。');
+                    }
+                }
+            });
+        }
     }
 
     initConfigUI();
 
-    // --- 7. 自前 FPS カウンター ---
+    // --- 7. FPS カウンター ---
     let frameTimes = [];
-    let fpsIntervalId = null;
-
     function startFpsCounter() {
-        if (fpsIntervalId) return;
-
         function refreshFps() {
             const now = performance.now();
             frameTimes.push(now);
-            
-            // 過去1秒間のフレームのみ保持
             while (frameTimes.length > 0 && frameTimes[0] <= now - 1000) {
                 frameTimes.shift();
             }
-
             fpsDisplay.textContent = `FPS: ${frameTimes.length}`;
             if (welcomeOverlay.style.display === 'none') {
                 requestAnimationFrame(refreshFps);
@@ -267,4 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         requestAnimationFrame(refreshFps);
     }
+
+    // 自動起動の実行
+    checkAndAutoStart();
 });

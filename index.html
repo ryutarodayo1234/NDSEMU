@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -12,6 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- ヘッダー -->
@@ -35,10 +37,11 @@
                 <div class="upload-zone" id="drop-zone">
                     <div class="pulse-ring"></div>
                     <div class="upload-content">
-                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
                         </svg>
                         <h2>ROMファイルをロード</h2>
                         <p class="drop-text">ここに .nds ファイルをドラッグ＆ドロップ</p>
@@ -76,6 +79,9 @@
                         </label>
                         <span class="control-label">上下画面を入れ替える</span>
                     </div>
+                    <div class="control-item btn-item">
+                        <button class="btn-danger" id="btn-clear-rom">保存されたROMを削除</button>
+                    </div>
                 </div>
             </div>
 
@@ -94,4 +100,5 @@
     <script src="desmond.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
