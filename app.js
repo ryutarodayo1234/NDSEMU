@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('msg-layer');
     const toastText = document.getElementById('msg-text');
 
-    // --- 1. Shadow DOM スタイルの動的注入 (下揃え & タッチ制限解除) ---
+    // --- 1. Shadow DOM スタイルの動的注入 (下揃え & キャンバス制限解除) ---
     function injectShadowStyles() {
         if (player && player.shadowRoot) {
             if (player.shadowRoot.querySelector('style')) return;
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     border-radius: 12px;
                     background-color: #000000;
                     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-                    touch-action: none; /* Safariでのスクロール・ダブルタップズームを防止 */
+                    touch-action: none; /* Safariでのスクロール・ズームを防止 */
                 }
                 #top {
                     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -127,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     welcomeOverlay.style.display = 'none';
                 }, 300);
 
-                unlockAudio();
                 setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
             });
         }
@@ -158,17 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("自動起動確認エラー:", e);
-        }
-    }
-
-    // --- 4. Safari 音声ブロック解除 ---
-    function unlockAudio() {
-        if (window.AudioContext || window.webkitAudioContext) {
-            const AudioClass = window.AudioContext || window.webkitAudioContext;
-            const dummyCtx = new AudioClass();
-            if (dummyCtx.state === 'suspended') {
-                dummyCtx.resume().then(() => dummyCtx.close());
-            }
         }
     }
 

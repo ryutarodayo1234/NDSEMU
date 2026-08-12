@@ -1,15 +1,19 @@
 /* --- Reset & Base --- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    position: fixed; /* iOSでのスクロールバウンス防止 */
+    position: fixed;
+    /* iOSでのスクロールバウンス防止 */
     background-color: #000;
     color: #f4f4f5;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -17,7 +21,6 @@ html, body {
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
-    touch-action: none; /* 画面全体のバウンス・スクロール・ダブルタップズームを防止 */
 }
 
 .app-container {
@@ -31,7 +34,8 @@ html, body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end; /* 画面下揃え */
+    justify-content: flex-end;
+    /* 画面下揃え */
     align-items: center;
     position: relative;
     overflow: hidden;
@@ -42,7 +46,8 @@ html, body {
     width: 100%;
     height: 100%;
     display: flex;
-    align-items: flex-end; /* 下揃え */
+    align-items: flex-end;
+    /* 下揃え */
     justify-content: center;
 }
 
@@ -106,7 +111,8 @@ desmond-player {
     margin-bottom: 8px;
 }
 
-.drop-text, .or-text {
+.drop-text,
+.or-text {
     font-size: 0.8rem;
     color: #a1a1aa;
 }
@@ -148,10 +154,13 @@ desmond-player {
 
 /* --- Keyframe Animations --- */
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(0.95);
         opacity: 0.2;
     }
+
     50% {
         transform: scale(1.05);
         opacity: 0.5;
