@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>PenDS - Touch Pen DS Emulator</title>
+    <!-- Google Fonts Inter の読み込み -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-logo">
+                <h1>PenDS</h1>
+                <span class="badge">Touch Pen Only</span>
+            </div>
+            <div class="fps-counter" id="fps-display">FPS: --</div>
+        </header>
+
+        <!-- エミュレータ画面エリア -->
+        <main class="emulator-container">
+            <div class="emulator-screen-box">
+                <!-- Desmond WASMコアがShadow DOMを展開するカスタムタグ -->
+                <desmond-player id="player"></desmond-player>
+            </div>
+
+            <!-- ROM未読み込み時のウェルカムオーバーレイ -->
+            <div id="welcome-overlay" class="overlay">
+                <div class="upload-zone" id="drop-zone">
+                    <div class="pulse-ring"></div>
+                    <div class="upload-content">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <h2>ROMファイルをロード</h2>
+                        <p class="drop-text">ここに .nds ファイルをドラッグ＆ドロップ</p>
+                        <p class="or-text">または</p>
+                        <button class="btn-primary" id="btn-select-rom">ファイルを選択</button>
+                        <input type="file" id="rom-input" accept=".nds" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- コントロール・設定パネル -->
+        <footer class="app-footer">
+            <div class="panel-section">
+                <h3>GAME CONTROLS</h3>
+                <div class="settings-grid">
+                    <div class="control-item">
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-power-save">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="control-label">30FPS制限 (省電力)</span>
+                    </div>
+                    <div class="control-item">
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-mute">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="control-label">消音 (ミュート)</span>
+                    </div>
+                    <div class="control-item">
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-swap-screen">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="control-label">上下画面を入れ替える</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- iOS Safari 用インストール案内 -->
+            <div class="ios-install-hint" id="pwa-hint">
+                <p>💡 Safariの共有メニューから「ホーム画面に追加」して起動すると、全画面かつ最適なパフォーマンスでプレイできます。</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- メッセージ表示レイヤー -->
+    <div id="msg-layer" class="toast-message" hidden>
+        <span id="msg-text"></span>
+    </div>
+
+    <script src="desmond.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+/* --- Reset & Base Styles --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-color-1: #09090b;
+    --bg-color-2: #121217;
+    --accent-cyan: #00f0ff;
+    --accent-glow: rgba(0, 240, 255, 0.4);
+    --accent-glow-purple: rgba(188, 19, 254, 0.4);
+    --accent-purple: #bc13fe;
+    --text-primary: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed; /* iOS での画面引っ張りバウンスを防ぐ */
+    background-color: var(--bg-color-1);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* --- App Layout --- */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 30%, #1a1a24 0%, var(--bg-color-1) 70%);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* --- Header --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    height: 60px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-logo h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, #fff 30%, var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--accent-cyan);
+    border-radius: 4px;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.fps-counter {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: var(--glass-bg);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+}
+
+/* --- Emulator Container --- */
+.emulator-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 10px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.emulator-screen-box {
+    width: 100%;
+    height: 100%;
+    max-width: 512px; /* タブレットやデスクトップでの制限幅 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+desmond-player {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Overlay & Upload Zone --- */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.upload-zone {
+    position: relative;
+    width: 90%;
+    max-width: 380px;
+    aspect-ratio: 1;
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--glass-bg);
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.02);
+}
+
+.pulse-ring {
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    animation: pulse 2s infinite ease-in-out;
+    opacity: 0.5;
+    z-index: 1;
+}
+
+.upload-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+}
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--accent-cyan);
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.upload-zone h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.drop-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.or-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #000;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--accent-glow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 10px var(--accent-glow);
+}
+
+/* --- Footer & Settings Panel --- */
+.app-footer {
+    padding: 20px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(9, 9, 11, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.panel-section h3 {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+@media(min-width: 480px) {
+    .settings-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 10px 14px;
+    border-radius: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.control-item:focus-within {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.control-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* --- Stylized Switch (Toggle) --- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .3s;
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+}
+
+.slider::before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: rgba(0, 240, 255, 0.2);
+    border-color: var(--accent-cyan);
+}
+
+input:checked + .slider::before {
+    transform: translateX(16px);
+    background-color: var(--accent-cyan);
+    box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+/* --- iOS Install PWA Hint --- */
+.ios-install-hint {
+    margin-top: 16px;
+    padding: 10px 12px;
+    background: rgba(188, 19, 254, 0.05);
+    border: 1px solid rgba(188, 19, 254, 0.2);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.ios-install-hint p {
+    font-size: 0.75rem;
+    color: #e494ff;
+    line-height: 1.4;
+}
+
+/* --- Toast Message --- */
+.toast-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(9, 9, 11, 0.9);
+    border: 1px solid var(--accent-cyan);
+    box-shadow: 0 0 16px var(--accent-glow);
+    padding: 10px 20px;
+    border-radius: 12px;
+    z-index: 100;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes pulse {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.2;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(0.9);
+        opacity: 0.2;
+    }
+}
